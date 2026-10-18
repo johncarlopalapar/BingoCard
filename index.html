@@ -9,24 +9,34 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         .bingo-cell {
-            aspect-ratio: 1 / 1;
+            /* FIXED WIDTH AND HEIGHT */
+            width: 110px;
+            height: 110px;
+            
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
             padding: 0.5rem;
-            font-size: 0.75rem; /* text-xs */
+            font-size: 0.7rem; /* slightly smaller to fit fixed box */
+            line-height: 1.2;
             border: 1px solid #e5e7eb;
             background-color: #ffffff;
             transition: background-color 0.2s;
             cursor: pointer;
+            overflow-y: auto; /* Allows scrolling inside the box if text is too long */
         }
+        
+        /* Fixed size for larger screens (tablets/desktops) */
         @media (min-width: 640px) {
             .bingo-cell {
-                font-size: 0.875rem; /* text-sm */
-                padding: 1rem;
+                width: 140px;
+                height: 140px;
+                font-size: 0.85rem; 
+                padding: 0.75rem;
             }
         }
+
         .bingo-cell.selected {
             background-color: #bfdbfe; /* blue-200 */
         }
@@ -34,7 +44,16 @@
             background-color: #2563eb; /* blue-600 */
             color: #ffffff;
             font-weight: bold;
-            font-size: 1rem;
+            font-size: 1.1rem;
+        }
+        
+        /* Hide scrollbars for a cleaner look */
+        .bingo-cell::-webkit-scrollbar {
+            display: none;
+        }
+        .bingo-cell {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     </style>
 </head>
@@ -48,7 +67,7 @@
         </div>
 
         <!-- Controls -->
-        <div class="flex gap-4 mb-6">
+        <div class="flex flex-wrap justify-center gap-4 mb-6">
             <button onclick="generateCard()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
@@ -63,11 +82,12 @@
             </button>
         </div>
 
-        <!-- Bingo Card Container (This specific div gets converted to image) -->
-        <div id="bingo-capture-area" class="bg-white p-4 sm:p-8 rounded-xl shadow-2xl w-full max-w-3xl border-8 border-blue-800">
+        <!-- Bingo Card Container -->
+        <div id="bingo-capture-area" class="bg-white p-4 sm:p-8 rounded-xl shadow-2xl border-8 border-blue-800 w-max mx-auto">
             <h2 class="text-3xl font-extrabold text-center text-blue-900 mb-6 uppercase tracking-widest">B I N G O</h2>
             
-            <div id="bingo-grid" class="grid grid-cols-5 gap-1 sm:gap-2 bg-blue-800 border-2 border-blue-800">
+            <!-- Grid container hugging the fixed cells perfectly -->
+            <div id="bingo-grid" class="grid grid-cols-5 gap-1 sm:gap-2 bg-blue-800 border-2 border-blue-800 w-max mx-auto">
                 <!-- Cells will be injected here by JavaScript -->
             </div>
             
@@ -78,7 +98,7 @@
     </div>
 
     <script>
-        // The 48 prompts with corrected commas and quotes
+        // The 48 prompts
         const prompts = [
             "Compared my body unfavorably to idealized images on social media.",
             "Experienced a noticeable mood boost and stress relief after a good workout.",
@@ -170,7 +190,7 @@
                     // Remove hover/click styles from free space
                     cell.style.cursor = 'default';
                 } else {
-                    // Get prompt (using pop since we have exactly 24 prompts for 24 empty slots)
+                    // Get prompt
                     cell.innerText = shuffledPrompts.pop();
                 }
                 
