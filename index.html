@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physical Self Bingo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Library to convert HTML to Image for downloading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        .bingo-cell {
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0.5rem;
+            font-size: 0.75rem; /* text-xs */
+            border: 1px solid #e5e7eb;
+            background-color: #ffffff;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        @media (min-width: 640px) {
+            .bingo-cell {
+                font-size: 0.875rem; /* text-sm */
+                padding: 1rem;
+            }
+        }
+        .bingo-cell.selected {
+            background-color: #bfdbfe; /* blue-200 */
+        }
+        .free-space {
+            background-color: #2563eb; /* blue-600 */
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center py-10 px-4 font-sans">
+
+    <div class="max-w-4xl w-full flex flex-col items-center">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-blue-800 mb-2">Physical Self Bingo</h1>
+            <p class="text-gray-600">Reflecting on our bodies, health, and societal expectations.</p>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex gap-4 mb-6">
+            <button onclick="generateCard()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                </svg>
+                Generate New Card
+            </button>
+            <button onclick="saveAsImage()" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+                Save to Device
+            </button>
+        </div>
+
+        <!-- Bingo Card Container (This specific div gets converted to image) -->
+        <div id="bingo-capture-area" class="bg-white p-4 sm:p-8 rounded-xl shadow-2xl w-full max-w-3xl border-8 border-blue-800">
+            <h2 class="text-3xl font-extrabold text-center text-blue-900 mb-6 uppercase tracking-widest">B I N G O</h2>
+            
+            <div id="bingo-grid" class="grid grid-cols-5 gap-1 sm:gap-2 bg-blue-800 border-2 border-blue-800">
+                <!-- Cells will be injected here by JavaScript -->
+            </div>
+            
+            <div class="mt-4 text-center text-sm text-gray-500 font-medium">
+                Physical Self & Well-being
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // The 24 prompts
+        const prompts = [
+            "Compared my body unfavorably to idealized images on social media.",
+            "Experienced a noticeable mood boost and stress relief after a good workout.",
+            "Struggled with my self-esteem because of my weight or physical appearance.",
+            "Felt frustrated or helpless due to a physical limitation or illness.",
+            "Appreciated a unique physical trait I inherited genetically from my parents.",
+            "Tried extreme dieting or over-exercising to meet a societal beauty standard.",
+            "Experienced mood swings or poor concentration after a night of inadequate sleep.",
+            "Felt my body image drop after a negative comment from family or friends.",
+            "Practiced a stress-relief technique like meditation, deep breathing, or yoga.",
+            "Felt a sense of positive body image by accepting my physical imperfections.",
+            "Felt energized and mentally clear after eating a balanced, nutritious meal.",
+            "Wished I could change my natural height, skin color, or body composition.",
+            "Withdrew from a social activity because I felt self-conscious about my looks.",
+            "Felt a strong sense of confidence from being able to perform physical tasks with ease.",
+            "Realized that the 'ideal' body shape changes depending on cultural norms.",
+            "Created and actively followed a personalized self-care or fitness plan.",
+            "Noticed my mental well-being decline directly because of poor physical health.",
+            "Felt pressured to conform to a specific cultural expectation of how a body should look.",
+            "Attended a routine medical check-up to proactively manage my physical well-being.",
+            "Struggled to accept my body because it doesn't match the media's narrow standards.",
+            "Experienced a boost in self-worth after receiving positive reinforcement about my appearance.",
+            "Used relaxing hobbies specifically to reduce the physical toll of chronic stress.",
+            "Felt a strong, direct connection between my current fitness level and my overall self-esteem.",
+            "Felt completely comfortable and confident in my own skin, regardless of expectations."
+        ];
+
+        // Function to shuffle an array (Fisher-Yates algorithm)
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // Toggle cell selection color
+        function toggleCell(cell) {
+            if(!cell.classList.contains('free-space')) {
+                cell.classList.toggle('selected');
+            }
+        }
+
+        // Function to generate the grid
+        function generateCard() {
+            const grid = document.getElementById('bingo-grid');
+            grid.innerHTML = ''; // Clear existing
+            
+            // Shuffle a copy of the prompts
+            let shuffledPrompts = shuffle([...prompts]);
+            
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'bingo-cell rounded-sm shadow-sm';
+                
+                // Add click event for interactive marking
+                cell.onclick = function() { toggleCell(this); };
+
+                if (i === 12) {
+                    // Center square is FREE SPACE
+                    cell.innerHTML = 'FREE<br>SPACE';
+                    cell.classList.add('free-space');
+                    // Remove hover/click styles from free space
+                    cell.style.cursor = 'default';
+                } else {
+                    // Get prompt (using pop since we have exactly 24 prompts for 24 empty slots)
+                    cell.innerText = shuffledPrompts.pop();
+                }
+                
+                grid.appendChild(cell);
+            }
+        }
+
+        // Function to save the card as an image
+        function saveAsImage() {
+            const captureArea = document.getElementById('bingo-capture-area');
+            
+            // Temporarily hide the selection styling so the downloaded image is blank
+            const selectedCells = document.querySelectorAll('.selected');
+            selectedCells.forEach(cell => cell.classList.remove('selected'));
+
+            html2canvas(captureArea, {
+                scale: 2, // Higher quality
+                backgroundColor: null,
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'physical-self-bingo.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                // Restore selected cells if they were actively playing on screen
+                selectedCells.forEach(cell => cell.classList.add('selected'));
+            });
+        }
+
+        // Generate a card automatically on page load
+        window.onload = generateCard;
+    </script>
+</body>
+</html>
